@@ -3,6 +3,7 @@ import axios from 'axios'
 axios.interceptors.request.use((config): any => {
   config.baseURL = import.meta.env.VITE_API_URL
   config.headers.Authorization = `Bearer ${localStorage.getItem('token')}`
+  config.headers.workspace = localStorage.getItem('workspace')
   return config
 })
 

@@ -1,12 +1,10 @@
 <script lang="ts">
-const App = {
-}
-
+const App = {}
 export default App
 </script>
 
 <template>
-  <div>1</div>
+  <router-view />
 </template>
 
 <style lang="scss" scoped>
