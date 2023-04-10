@@ -1,0 +1,100 @@
+@import url('https://fonts.googleapis.com/css2?family=Istok+Web:wght@400;700&display=swap');
+
+// Colors
+$primary-dark: #1e1e25;
+$primary: #5e548e;
+$primary-light: #b298dc;
+
+$accent: #b0b0eb;
+$accent-light: #b0b0eb91;
+
+$black: #0e0e0e;
+$grey-100: #1e1e25;
+$grey-200: #24242c;
+$grey-300: #353541;
+$grey-400: #3f3f47;
+$grey-500: #565661;
+$grey-600: #bfbfcd;
+
+$white: #fff;
+
+$red-100: #F44A4A;
+$red-200: #ed6060;
+$error: $red-100;
+
+$green-100: #53ff59;
+$success: $green-100;
+
+//
+
+// Font
+$font-size-small: 10px;
+$font-size-smaller: 12px;
+$font-size-normal: 14px;
+$font-size-big: 16px;
+$font-size-large: 18px;
+$font-size-larger: 22px;
+
+$font-weight-bold: 700;
+$font-weight-semibold: 600;
+$font-weight-medium: 500;
+$font-weight-normal: 400;
+
+$transition-duration: 0.3s;
+
+$font-family-primary: 'Istok web', sans-serif;
+
+*, *::after, *::before {
+  box-sizing: border-box;
+  margin: 0;
+  // padding: 0;
+
+  font-family: $font-family-primary;
+  font-size: $font-size-normal;
+}
+
+@mixin set-prop-states-values(
+  $prop,
+  $default-value,
+  $hover-value: $default-value,
+  $active-value: $hover-value,
+  $focus-value: $active-value,
+) {
+  #{$prop}: $default-value;
+
+  &:hover {
+    #{$prop}: $hover-value;
+  }
+
+  &:active {
+    #{$prop}: $active-value;
+
+  }
+
+  &:focus-visible {
+    #{$prop}: $focus-value !important;
+    box-shadow: 0 0 0 3px $primary-dark;
+  }
+}
+
+div[contenteditable=true] {
+  background-color: $grey-300;
+  border: 2px solid $grey-100;
+  outline: none;
+  border-radius: 5px;
+  padding: 0 5px;
+}
+
+*::-webkit-scrollbar {
+  height: 12px;
+  &-track {
+    background-color: $grey-400;
+    border-radius: 1000px;
+  }
+  &-thumb {
+    border-radius: 1000px;
+
+    @include set-prop-states-values(background-color, $accent, $accent-light)
+  }
+}
+

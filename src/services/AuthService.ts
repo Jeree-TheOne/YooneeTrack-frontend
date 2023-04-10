@@ -1,26 +1,24 @@
-import AuthController from "../controllers/AuthController";
-import AuthDomain from "../domains/AuthDomain";
+import AuthController from "@/controllers/authController";
+import User from "@/models/response/User";
+import StorageService from "@/services/storageService";
 
 
-export default class AuthService {
-  private authDomain: AuthDomain
-
-  constructor(authDomain: AuthDomain) {
-    this.authDomain = authDomain
-  }
-  async login(login: string, password: string) {
+class AuthService {
+  async login(login: string, password: string): Promise<User> {
     const { data } = await AuthController.login({login, password});
-    this.authDomain.setUser(data);
-    console.log(data);
+    StorageService.setItem('token', data.access_token);
+
+    return data.user
   }
 
   async registration(email: string, password: string) {
-    const { data } = await AuthController.registration({email, password});
-    
-    console.log(data);
+    await AuthController.registration({email, password});    
   }
 
   async logout() {
-    await AuthController.logout()
+    AuthController.logout()
+    StorageService.removeItem('token')
   }
 }
+
+export default new AuthService()

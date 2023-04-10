@@ -1,11 +1,29 @@
 <script lang="ts">
-const App = {}
-export default App
+import { defineComponent } from "vue";
+
+export default defineComponent({
+  created() {
+  }
+})
 </script>
 
 <template>
-  <router-view />
+  <div class="container">
+    <router-view/>
+  </div>
 </template>
 
+<style lang="scss">
+body {
+  background-color: $primary-dark;
+
+  color: $white;
+}
+</style>
+
 <style lang="scss" scoped>
+.container {
+  width: 100vw;
+  height: 100vh;
+}
 </style>
