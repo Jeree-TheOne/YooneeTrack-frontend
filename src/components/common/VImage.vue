@@ -11,7 +11,7 @@ export default defineComponent({
 
   computed: {
     image() {
-      return 'http://localhost:5000/' + this.path
+      return 'http://localhost:3000/' + this.path
     }
   }
 })

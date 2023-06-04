@@ -8,6 +8,7 @@ import VIcon from "../common/VIcon.vue";
 import { defineComponent, PropType, StyleValue } from "vue";
 import { capitalizeFirstLetter, fromNumberToTime, fromTimeToNumber } from "@/utils/formatters";
 import TaskAll from "@/models/response/TaskAll";
+import Member from "@/models/Member";
 export default defineComponent({
   components: {
     VTag,
@@ -38,19 +39,27 @@ export default defineComponent({
       return this.tags?.filter((tag: Tag) => this.task.tags.includes(tag.id))
     },
 
+    members() {
+      return this.$attrs.members as Member[]
+    },
+
+    performer() {
+      return this.members.find(member => member.id == this.task.performerId)
+    },
+
     completed() {
-      if (!this.task.initial_assessment || Number(this.task.initial_assessment) < this.task.spent_time) return '0%'
-      return (this.task.spent_time / this.task.initial_assessment * 100) + '%'
+      if (!this.task.initialAssessment || Number(this.task.initialAssessment) < this.task.spentTime) return '0%'
+      return (this.task.spentTime / this.task.initialAssessment * 100) + '%'
     },
 
     assessment() {
-      if (!this.task.initial_assessment) return '?'
-      return fromNumberToTime(this.task.initial_assessment)
+      if (!this.task.initialAssessment) return '?'
+      return fromNumberToTime(this.task.initialAssessment)
     },
 
     styles(): StyleValue {
-      if (!this.task.initial_assessment) return {}
-      if (Number(this.task.initial_assessment) < this.task.spent_time)
+      if (!this.task.initialAssessment) return {}
+      if (Number(this.task.initialAssessment) < this.task.spentTime)
       return {
         'background-color': 'red'
       }
@@ -64,7 +73,7 @@ export default defineComponent({
   <div @click="openTaskCard" v-if="task.id" class="task-card">
     <div class="task-card__header">
       <div class="task-card__title">{{ task.title ? capitalizeFirstLetter(task.title) : '' }}</div>
-      <div class="task-card__task-type">{{ task.task_type ? capitalizeFirstLetter(task.task_type) : '' }}</div>
+      <div class="task-card__task-type">{{ task.taskType ? capitalizeFirstLetter(task.taskType) : '' }}</div>
       <v-tag class="task-card__tag" v-for="tag in taskTags" :color="tag.color" :background="tag.background">{{ capitalizeFirstLetter(tag.name) }}</v-tag>
     </div>
     <div class="task-card__body">
@@ -72,9 +81,9 @@ export default defineComponent({
     </div>
     <div class="task-card__footer">
       <div class="task-card__performer">
-        <v-image class="task-card__performer-avatar" v-if="task.performer_avatar" :path="task.performer_avatar"/>
+        <v-image class="task-card__performer-avatar" v-if="performer" :path="performer.avatar"/>
         <v-icon v-else size="24" name="questionMarkIcon"/>
-        <div v-if="task.performer_email">{{ task.performer_email }}</div>
+        <div v-if="performer">{{ performer?.email }}</div>
       </div>
       <div class="task-card__spend">
         <div class="task-card__circle" :style="styles"/>
@@ -89,10 +98,10 @@ export default defineComponent({
   background-color: $grey-300;
   border-radius: 12px;
   border: 1px solid $accent-light;
-  padding: 8px 16px;
+  padding: 12px 16px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 
   cursor: pointer;
 
@@ -100,8 +109,8 @@ export default defineComponent({
 
   &__header {
     display: flex;
-    flex-wrap: nowrap;
-    gap: 12px;
+    flex-wrap: wrap;
+    gap: 2px 12px;
     align-items: center;
 
     overflow: hidden;

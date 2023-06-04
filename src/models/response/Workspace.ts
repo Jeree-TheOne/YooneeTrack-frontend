@@ -7,7 +7,7 @@ import TaskType from "../TaskType";
 
 export default interface Workspace {
   id: string;
-  created_at: number;
+  createdAt: number;
   name: string;
   desks: Desk[];
   rows: Row[];

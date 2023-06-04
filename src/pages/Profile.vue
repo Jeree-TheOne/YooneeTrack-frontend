@@ -81,9 +81,9 @@ export default defineComponent({
       </div>
       <div class="profile__change-password">
         <div class="profile__change-password-title">Сменить пароль</div>
-        <v-input placeholder="Старый пароль" v-model="passwords.old"/>
-        <v-input placeholder="Новый пароль" v-model="passwords.new"/>
-        <v-input placeholder="Повторите новый пароль" v-model="passwords.newRep"/>
+        <v-input type="password" placeholder="Старый пароль" v-model="passwords.old"/>
+        <v-input type="password" placeholder="Новый пароль" v-model="passwords.new"/>
+        <v-input type="password" placeholder="Повторите новый пароль" v-model="passwords.newRep"/>
         <v-button @click="changePassword">Обновить пароль</v-button>
       </div>
     </div>

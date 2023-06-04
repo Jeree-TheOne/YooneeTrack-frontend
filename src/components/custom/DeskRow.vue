@@ -23,7 +23,7 @@ export default defineComponent({
 
   methods: {
     tasksInColumn(columnId: string): TaskAll[] {
-      return this.tasks.filter(task => task.column_id === columnId)
+      return this.tasks.filter(task => task.columnId === columnId)
     },
 
     openAddTaskModal(columnId: string) {
@@ -57,21 +57,19 @@ export default defineComponent({
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 8px 16px;
     gap: 16px;
     height: 44px;
-
-    width: 100%;
+    width: 100%
   }
 
   &__name {
-    position: sticky;
+    position: absolute;
     left: 0;
     font-size: 18px;
   }
 
   &__count {
-    position: sticky;
+    position: absolute;
     right: 0;
     font-size: 12px;
     color: $accent;
@@ -83,7 +81,7 @@ export default defineComponent({
 
   &__column {
     padding: 6px 18px;
-    min-width: 350px;
+    min-width: 180px;
     width: 100%;
     border-left: 1px solid $grey-500;
 

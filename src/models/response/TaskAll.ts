@@ -2,12 +2,11 @@ export default interface TaskAll {
   id: string;
   title: string;
   description: string;
-  performer_avatar?: string;
-  performer_email?: string;
+  performerId?: string;
   tags: string[];
-  task_type: string;
-  row_id: string;
-  column_id: string;
-  initial_assessment?: number;
-  spent_time: number;
+  taskType: string;
+  rowId: string;
+  columnId: string;
+  initialAssessment?: number;
+  spentTime: number;
 }

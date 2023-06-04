@@ -79,7 +79,7 @@ export default defineComponent({
 
   computed: {
     translations(): any {
-      return { rows: 'Категории', columns: 'Статусы', desks: 'Доски', tags: 'Тэги', taskTypes: 'Типы задач' }
+      return { rows: 'Категории', columns: 'Статусы', desks: 'Доски', tags: 'Тэги', taskTypes: 'Типы задач', members: "Участники" }
     }
   }
 })
@@ -90,7 +90,7 @@ export default defineComponent({
     <div class="settings-row__title">{{ translations[name] }}</div>
     <div class="settings-row__items">
       <v-button @click="openItem(item)" v-for="item in items" class="settings-row__item">
-        {{ item.name }}
+        {{ item.name || item.email }}
         <v-button @click.stop="remove(item.id)" size="20" icon>
           <v-icon size="20" name="crossIcon"/>
         </v-button>
@@ -120,6 +120,8 @@ export default defineComponent({
   &__item {
     display: flex;
     gap: 16px;
+
+    white-space: nowrap;
 
     border: 1px solid $accent;
     border-radius: 8px;

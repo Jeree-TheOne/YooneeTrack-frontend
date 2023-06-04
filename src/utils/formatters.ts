@@ -78,4 +78,13 @@ export function isTimeValid(time: string): boolean {
   return isValid
 }
 
-isTimeValid('1s ')
+export function date(number: number | Date): string {
+  const date = new Date(number)
+  const d = date.getDate();
+  const mo = date.getMonth() + 1;
+  const y = date.getFullYear();
+  const h = date.getHours();
+  const m = date.getMinutes();
+
+  return `${d < 10 ? '0' + d : d }/${mo < 10 ? '0' + mo : mo }/${y} ${h < 10 ? '0' + h : h }:${m < 10 ? '0' + m : m }`
+}

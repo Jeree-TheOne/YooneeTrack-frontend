@@ -1,6 +1,6 @@
 export default interface User {
   id: string;
-  created_at: number;
+  createdAt: number;
   login: string;
   email: string;
   first_name: string;

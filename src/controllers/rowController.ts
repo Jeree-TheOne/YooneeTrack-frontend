@@ -1,15 +1,15 @@
 import axios from "axios"
 
 export default class RowController {
-  static async add(name: string) {
-    return axios.post('/row/add', { name })
+  static async create(name: string) {
+    return await axios.post('/row', { name })
   }
 
   static async update(id: string, name: string) {
-    return axios.put('/row/update/' + id, { name })
+    return await axios.put('/row/' + id, { name })
   }
 
   static async delete(id: string): Promise<void> {
-    return axios.delete('/row/delete/' + id)
+    return await axios.delete('/row/' + id)
   }
 }

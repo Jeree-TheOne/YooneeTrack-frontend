@@ -22,6 +22,7 @@ import columnController from "@/controllers/columnController";
 import taskTypeController from "@/controllers/taskTypeController";
 import tagController from "@/controllers/tagController";
 import deskController from "@/controllers/deskController";
+import Member from "@/models/Member";
 
 
 
@@ -36,12 +37,12 @@ export default defineComponent({
 
   props: {
     name: { type: String, default: ''},
-    item: { type: Object as PropType<Column | Row | TaskType | Tag | Desk>, default: {}},
+    item: { type: Object as PropType<Column | Row | TaskType | Tag | Desk | Member>, default: {}},
   },
 
   data() {
     return {
-      localItem: null as unknown as Column | Row | TaskType | Tag | Desk,
+      localItem: null as unknown as Column | Row | TaskType | Tag | Desk | Member,
 
       isAdd: false,
     }
@@ -66,13 +67,10 @@ export default defineComponent({
             taskTypeController.add(this.localItem.name)
             break;
           case 'desk': 
-            const { data } = await deskController.add(this.localItem.name)
-            if ((this.localItem as any).is_current) {
-              deskController.setCurrent(data.id)
-            }
+            await deskController.create(this.localItem.name, this.localItem.isCurrent)
             break;
           case 'tag': 
-            tagController.add(this.localItem.name, (this.localItem as any).background, (this.localItem as any).color)
+            await tagController.create(this.localItem.name, (this.localItem as any).background, (this.localItem as any).color)
             break;
         }
       }
@@ -88,9 +86,9 @@ export default defineComponent({
             taskTypeController.update(this.localItem.id, this.localItem.name)
             break;
           case 'desk': 
-            deskController.update(this.localItem.id, this.localItem.name)
-            if ((this.localItem as any).is_current) {
-              deskController.setCurrent(this.localItem.id)
+            await deskController.update(this.localItem.id, this.localItem.name)
+            if ((this.localItem as any).isCurrent) {
+              await deskController.setCurrent(this.localItem.id)
             }
             break;
           case 'tag':
@@ -110,7 +108,7 @@ export default defineComponent({
     },
 
     translation(): any {
-      return { row: 'категорию', column: 'статус', desk: 'доску', tag: 'тэг', taskType: 'тип задачи' }
+      return { row: 'категорию', column: 'статус', desk: 'доску', tag: 'тэг', taskType: 'тип задачи', member: 'участника' }
     }
   },
 
@@ -131,7 +129,9 @@ export default defineComponent({
   <v-modal @close="closeModal" fullscreen v-bind="$attrs">
     <div class="workspace-setting-card-modal">
       <div class="workspace-setting-card-modal__title">{{ isAdd ? 'Добавить' : 'Изменить' }} {{ translation[formattedName] }}</div>
-      <v-input class="workspace-setting-card-modal__input" v-model="localItem.name" placeholder="Наименование"/>
+      <v-input v-if="formattedName !== 'member'" class="workspace-setting-card-modal__input" v-model="localItem.name" placeholder="Наименование"/>
+      <v-input disabled v-else class="workspace-setting-card-modal__input" v-model="localItem.email" placeholder="Почта"/>
+      
       <div class="workspace-setting-card-modal__pickers" v-if="formattedName === 'tag'">
         <div class="workspace-setting-card-modal__picker">
           Цвет фона
@@ -150,7 +150,7 @@ export default defineComponent({
         <input
         class="checkbox"
           type="checkbox"
-          v-model="(localItem as any).is_current"
+          v-model="(localItem as any).isCurrent"
         >
         <span class="checkmark"></span>
         Текущая доска

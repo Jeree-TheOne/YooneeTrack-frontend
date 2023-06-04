@@ -1,15 +1,15 @@
 import axios from "axios"
 
 export default class ColumnController {
-  static async add(name: string) {
-    return axios.post('/column/add', { name })
+  static async create(name: string) {
+    return await axios.post('/column', { name })
   }
 
   static async update(id: string, name: string) {
-    return axios.put('/column/update/' + id, { name })
+    return await axios.put('/column' + id, { name })
   }
 
   static async delete(id: string): Promise<void> {
-    return axios.delete('/column/delete/' + id)
+    return await axios.delete('/column' + id)
   }
 }

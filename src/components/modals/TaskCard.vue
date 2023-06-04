@@ -1,4 +1,5 @@
 <script lang="ts">
+import axios from 'axios'
 import { defineComponent, PropType } from "vue";
 
 import VModal from "../common/VModal.vue";
@@ -8,13 +9,17 @@ import VButton from "../common/VButton.vue";
 import VSelect from "../common/VSelect.vue";
 import VIcon from "../common/VIcon.vue";
 import VDropFile from "../common/VDropFile.vue";
+import VImage from "../common/VImage.vue";
 
 import Task from "@/models/Task";
 import Workspace from "@/models/response/Workspace";
 import taskService from "@/services/taskService";
+import WallHistory from "@/models/response/wall/WallHistory";
+import Comment from "@/models/response/wall/Comment";
+import SpentTime from "@/models/response/wall/SpentTime";
 
 import Multiselect from '@vueform/multiselect'
-import { fromNumberToTime, fromTimeToNumber, isTimeValid, capitalizeFirstLetter } from "@/utils/formatters";
+import { fromNumberToTime, fromTimeToNumber, isTimeValid, capitalizeFirstLetter, date } from "@/utils/formatters";
 
 
 
@@ -27,7 +32,8 @@ export default defineComponent({
     VSelect,
     VIcon,
     Multiselect,
-    VDropFile
+    VDropFile,
+    VImage
   },
 
   props: {
@@ -38,6 +44,7 @@ export default defineComponent({
   data() {
     return {
       localTask: null as unknown as Task,
+      wall: null as unknown as (WallHistory | Comment | SpentTime)[],
 
       isAdd: null as unknown as Boolean,
       isEdit: false,
@@ -49,18 +56,17 @@ export default defineComponent({
   methods: {
     async save() {
       if (this.isAdd) {
-        const { title, description, row_id, column_id, task_type_id, tags, initial_assessment, performer  } = this.localTask
-        const deskId = this.$route.params.deskId === 'current' ? this.workspace.desks.find(desk => desk.is_current)?.id || '' : this.$route.params.deskId as string
-        await taskService.add(title, description, row_id, column_id, deskId as string, task_type_id, tags, initial_assessment, performer, this.files)
-        this.$emit('close', true)
+        const { title, description, rowId, columnId, taskTypeId, tags, initialAssessment, performerId  } = this.localTask
+        const deskId = this.$route.params.deskId === 'current' ? this.workspace.desks.find(desk => desk.isCurrent)?.id || '' : this.$route.params.deskId as string
+        await taskService.add(title, description, rowId, columnId, deskId as string, taskTypeId, tags, initialAssessment, performerId, this.files)
       }
 
       else {
-        const { id, title, description, row_id, column_id, task_type_id, tags, initial_assessment, spent_time,  performer } = this.localTask
-        const deskId = this.$route.params.deskId === 'current' ? this.workspace.desks.find(desk => desk.is_current)?.id || '' : this.$route.params.deskId as string
-        await taskService.update(id, title, description, row_id, column_id, deskId, task_type_id, tags, initial_assessment, spent_time, performer, this.files)
+        const { id, title, description, rowId, columnId, taskTypeId, tags, initialAssessment,  performerId } = this.localTask
+        const deskId = this.$route.params.deskId === 'current' ? this.workspace.desks.find(desk => desk.isCurrent)?.id || '' : this.$route.params.deskId as string
+        await taskService.update(id, title, description, rowId, columnId, deskId, taskTypeId, tags, initialAssessment, performerId, this.files)
       }
-    this.$emit('close', true)
+    this.$emit('close')
     },
 
     edit() {
@@ -71,48 +77,71 @@ export default defineComponent({
       this.localTask = {} as Task;
       this.isAdd = null as unknown as Boolean
       this.isEdit = false
+      this.$emit('close')
     },
 
     rowChange(row: string) {
-      this.localTask.row_id = row
+      this.localTask.rowId = row
     },
 
     columnChange(column: string) {
-      this.localTask.column_id = column
+      this.localTask.columnId = column
     },
 
     taskTypeChange(taskType: string) {
-      this.localTask.task_type_id = taskType
+      this.localTask.taskTypeId = taskType
     },
 
     performerChange(performer: string) {
-      this.localTask.performer = performer
+      this.localTask.performerId = performer
     },
 
     changeFiles(files: File[]) {
       this.files = files
     },
     updateAssessment(value: string) {
-      console.log(fromTimeToNumber(value));
-      this.localTask.initial_assessment = fromTimeToNumber(value)
+      this.localTask.initialAssessment = fromTimeToNumber(value)
     },
 
     updateSpent(value: string) {
-      this.localTask.spent_time = fromTimeToNumber(value)
+      this.localTask.spentTime = fromTimeToNumber(value)
     },
 
     fileHref(path: string) {
-      return import.meta.env.VITE_API_URL + path
+      return import.meta.env.VITE_API_URL + '/' + path
     },
 
     fromNumberToTime,
-    capitalizeFirstLetter
+    capitalizeFirstLetter,
+    date
   },
 
   computed: {
     saveText() {
       if (this.isAdd) return 'Добавить'
       return 'Сохранить'
+    },
+
+    author() {
+      return this.workspace.members.find(member => member.id === this.localTask.authorId)
+    },
+
+    updater() {
+      return this.workspace.members.find(member => member.id === this.localTask.updaterId)
+    },
+
+    historyFields() {
+      return {
+        title: 'Заголовок',
+        description: 'Описание',
+        performerId: 'Исполнитель',
+        tags: 'Тэги',
+        files: 'Файлы',
+        taskTypeId: 'Тип задачи',
+        columnId: 'Статус задачи',
+        rowId: 'Категория задачи',
+        initialAssessment: 'Начальная оценка задачи',
+      }
     }
   },
 
@@ -124,8 +153,9 @@ export default defineComponent({
           this.isAdd = !this.localTask.id
           if (!this.isAdd) {
             this.localTask = await taskService.selectOne(this.localTask.id)
+            this.wall = await taskService.getWall(this.localTask.id)
           }
-          else this.localTask.task_type_id = this.workspace.taskTypes[0].id
+          else this.localTask.taskTypeId = this.workspace.taskTypes[0].id
         }
       },
       deep: true,
@@ -138,8 +168,31 @@ export default defineComponent({
 <template>
   <v-modal @close="closeModal" fullscreen v-bind="$attrs">
     <div class="task-card-modal">
+      <div class="task-card-modal__header">
+        <div v-if="author" class="task-card-modal__user">
+          Добавлено: 
+          <div  class="task-card-modal__user-block">
+            <v-image :path="author.avatar"/>
+            <div class="task-card-modal__user-info">
+              <div class="task-card-modal__user-email">{{ author.email }}</div>
+              <div class="task-card-modal__user-action-time">{{ date(localTask.createdAt) }}</div>
+            </div>
+          </div>
+        </div>
+        <div v-if="updater" class="task-card-modal__user">
+          Изменено:
+          <div class="task-card-modal__user-block">
+            <v-image :path="updater.avatar"/>
+            <div class="task-card-modal__user-info">
+              <div class="task-card-modal__user-email">{{ updater.email }}</div>
+              <div v-if="localTask.updatedAt" class="task-card-modal__user-action-time">{{ date(localTask.updatedAt) }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
       <div class="task-card-modal__body">
-        <div v-if="isAdd || isEdit" class="task-card-modal__add-edit-fields">
+        <div class="task-card-modal__main">
+          <div v-if="isAdd || isEdit" class="task-card-modal__add-edit-fields">
           <v-input v-model="localTask.title" placeholder="Заголовок" class="task-card-modal__input"/>
           <v-textarea rows="7" v-model="localTask.description" placeholder="Описание" class="task-card-modal__input"/>
           <v-drop-file @change-files="changeFiles"/>
@@ -153,42 +206,42 @@ export default defineComponent({
             <v-button class="task-card-modal__file" target="_blank" v-for="file, index in localTask.files" :href="fileHref(file)">Файл {{ index + 1 }}</v-button>
           </div>
         </div>
-        <div class="task-card-modal__body-bottom">
+        <div class="task-card-modal__main-bottom">
           <v-button class="task-card-modal__create" @click="save">{{ saveText }}</v-button>
-          <v-input v-if="!isAdd" class="task-card-modal__spent-time" placeholder="Потрачено времени" @update:modelValue="updateSpent" :modelValue="fromNumberToTime(localTask.spent_time || 0)"/>
+          <v-input v-if="!isAdd" class="task-card-modal__spent-time" placeholder="Потрачено времени" @update:modelValue="updateSpent" :modelValue="fromNumberToTime(localTask.spentTime || 0)"/>
         </div>
-      </div>
-      <hr class="task-card-modal__divider">
-      <div class="task-card-modal__sidebar">
-        <v-select class="task-card-modal__select-container" @change="taskTypeChange" :value="task.task_type_id" :items="workspace.taskTypes" itemText="name" itemValue="id" placeholder="Тип задачи">
+        </div>
+        <hr class="task-card-modal__divider">
+        <div class="task-card-modal__sidebar">
+        <v-select class="task-card-modal__select-container" @change="taskTypeChange" :value="task.taskTypeId" :items="workspace.taskTypes" itemText="name" itemValue="id" placeholder="Тип задачи">
           <template #activator="{ attrs }">
             <v-button class="task-card-modal__select" @click="attrs.click">
-              {{ workspace.taskTypes.find(taskType => taskType.id === localTask.task_type_id)?.name }}
+              {{ workspace.taskTypes.find(taskType => taskType.id === localTask.taskTypeId)?.name }}
               <v-icon class="task-card-modal__select-icon" size="16" name="arrowDownIcon"/>
             </v-button>
           </template>
         </v-select>
-        <v-select class="task-card-modal__select-container" @change="rowChange" :value="localTask.row_id" :items="workspace.rows" itemText="name" itemValue="id" placeholder="Категория">
+        <v-select class="task-card-modal__select-container" @change="rowChange" :value="localTask.rowId" :items="workspace.rows" itemText="name" itemValue="id" placeholder="Категория">
           <template #activator="{ attrs }">
             <v-button class="task-card-modal__select" @click="attrs.click">
-              {{ workspace.rows.find(row => row.id === localTask.row_id)?.name }}
+              {{ workspace.rows.find(row => row.id === localTask.rowId)?.name }}
               <v-icon class="task-card-modal__select-icon" size="16" name="arrowDownIcon"/>
             </v-button>
           </template>
         </v-select>
-        <v-select class="task-card-modal__select-container" @change="columnChange" :value="localTask.column_id" :items="workspace.columns" itemText="name" itemValue="id" placeholder="Статус">
+        <v-select class="task-card-modal__select-container" @change="columnChange" :value="localTask.columnId" :items="workspace.columns" itemText="name" itemValue="id" placeholder="Статус">
           <template #activator="{ attrs }">
             <v-button class="task-card-modal__select" @click="attrs.click">
-              {{ workspace.columns.find(column => column.id === localTask.column_id)?.name }}
+              {{ workspace.columns.find(column => column.id === localTask.columnId)?.name }}
               <v-icon class="task-card-modal__select-icon" size="16" name="arrowDownIcon"/>
             </v-button>
           </template>
         </v-select>
-        <v-select class="task-card-modal__select-container" @change="performerChange" :value="localTask.performer" :items="workspace.members" itemText="email" itemValue="id" placeholder="Исполнитель">
+        <v-select class="task-card-modal__select-container" @change="performerChange" :value="localTask.performerId" :items="workspace.members" itemText="email" itemValue="id" placeholder="Исполнитель">
           <template #activator="{ attrs }">
             <v-button class="task-card-modal__select" @click="attrs.click">
               <div class="task-card-modal__performer">
-                {{ workspace.members.find(member => member.id === localTask.performer)?.email }}
+                {{ workspace.members.find(member => member.id === localTask.performerId)?.email }}
               </div>
               <v-icon class="task-card-modal__select-icon" size="16" name="arrowDownIcon"/>
             </v-button>
@@ -215,8 +268,74 @@ export default defineComponent({
           </template>
         </multiselect>
         </div>
-        <v-input class="task-card-modal__initial-assessment" placeholder="Оценка задачи по времени" @update:modelValue="updateAssessment" :modelValue="fromNumberToTime(localTask.initial_assessment || 0)"/>
+        <v-input class="task-card-modal__initial-assessment" placeholder="Оценка задачи по времени" @update:modelValue="updateAssessment" :modelValue="fromNumberToTime(localTask.initialAssessment || 0)"/>
         <v-button v-if="!isAdd" class="task-card-modal__edit" @click="edit">{{ isEdit ? 'Отменить' : 'Редактировать' }}</v-button>
+        </div>
+      </div>
+      <div class="task-card-modal__wall">
+        <div v-for="item in wall" class="task-card-modal__wall-row">
+          <div class="task-card-modal__wall-block" v-if="item.type === 'history'">
+            <div  class="task-card-modal__user-block">
+              <v-image :path="workspace.members.find(member => member.id === item.userId)?.avatar"/>
+              <div class="task-card-modal__user-info">
+                <div class="task-card-modal__user-email">{{ workspace.members.find(member => member.id === item.userId)?.email }}</div>
+                <div class="task-card-modal__user-action-time">{{ date(item.createdAt) }}</div>
+              </div>
+            </div>
+            <div>Изменено:</div>
+            <div v-for="updatedField, index in item.updatedFields">
+              {{ historyFields[updatedField] }} 
+                <div v-if="updatedField === 'tags'">
+                  {{ item.previousValues[index].split(',').map(tag => workspace.tags.find(t => t.id == tag).name).join(', ') }} ->
+                  {{ item.fieldsValues[index].split(',').map(tag => workspace.tags.find(t => t.id == tag).name).join(', ') }}
+                </div>
+                <div v-else-if="updatedField === 'performerId'">
+                  {{ workspace.members.find(member => member.id === item.previousValues[index])?.email  }} ->
+                  {{ workspace.members.find(member => member.id === item.fieldsValues[index]).email }}
+                </div>
+                <div v-else-if="updatedField === 'taskTypeId'">
+                  {{ workspace.taskTypes.find(taskType => taskType.id === item.previousValues[index]).name  }} ->
+                  {{ workspace.taskTypes.find(taskType => taskType.id === item.fieldsValues[index]).name }}
+                </div>
+                <div v-else-if="updatedField === 'columnId'">
+                  {{ workspace.columns.find(column => column.id === item.previousValues[index]).name  }} ->
+                  {{ workspace.columns.find(column => column.id === item.fieldsValues[index]).name }}
+                </div>
+                <div v-else-if="updatedField === 'rowId'">
+                  {{ workspace.rows.find(row => row.id === item.previousValues[index]).name  }} ->
+                  {{ workspace.rows.find(row => row.id === item.fieldsValues[index]).name }}
+                </div>
+                <div v-else-if="updatedField === 'initialAssessment'">
+                  {{ fromNumberToTime(item.previousValues[index]) }} ->
+                  {{ fromNumberToTime(item.fieldsValues[index]) }}
+                </div>
+                <div v-else-if="updatedField !== 'files'"> 
+                  {{ item.previousValues[index] }} -> 
+                  {{ item.fieldsValues[index] }}
+                </div>
+            </div> 
+          </div>
+          <div class="task-card-modal__wall-block" v-else-if="item.type === 'comment'">
+            <div  class="task-card-modal__user-block">
+              <v-image :path="workspace.members.find(member => member.id === item.userId)?.avatar"/>
+              <div class="task-card-modal__user-info">
+                <div class="task-card-modal__user-email">{{ workspace.members.find(member => member.id === item.userId)?.email }}</div>
+                <div class="task-card-modal__user-action-time">{{ date(item.createdAt) }}</div>
+              </div>
+            </div>
+            {{ item.text }}
+          </div>
+          <div class="task-card-modal__wall-block" v-else-if="item.type === 'spentTime'">
+            <div class="task-card-modal__user-block">
+              <v-image :path="workspace.members.find(member => member.id === item.userId)?.avatar"/>
+              <div class="task-card-modal__user-info">
+                <div class="task-card-modal__user-email">{{ workspace.members.find(member => member.id === item.userId)?.email }}</div>
+                <div class="task-card-modal__user-action-time">{{ date(item.createdAt) }}</div>
+              </div>
+            </div>
+            Потрачено времени: {{ fromNumberToTime(item.currentTimeSpent) || '0' }} -> {{ fromNumberToTime(item.currentTimeSpent + item.spentTime) }}
+          </div>
+        </div>
       </div>
     </div>
   </v-modal>
@@ -271,11 +390,57 @@ export default defineComponent({
   padding: 20px;
   width: 800px;
   height: 100%;
+  max-height: 700px;
 
   display: flex;
-  gap: 16px;
+  flex-direction: column;
+
+  &__wall {
+    display: flex;
+    flex-direction: column;
+
+    padding: 14px 0;
+
+    gap: 8px;
+
+    &-block {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 12px;
+    }
+  }
+
+  &__header {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 24px;
+  }
+
+  &__user {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    &-block {
+      display: flex;
+      gap: 16px;
+
+      align-items: center;
+    }
+
+    &-action-time {
+      color: $grey-600;
+      font-size: 12px;
+    }
+  }
 
   &__body {
+    display: flex;
+  gap: 16px;
+  }
+
+  &__main {
     width: 100%;
 
     display: flex;
@@ -412,7 +577,7 @@ export default defineComponent({
   &__spent-time {
     margin-left: auto;
     &:deep(.v-input__field) {
-      background-color: $grey-200;
+      background-color: $grey-300;
     }
   }
 }

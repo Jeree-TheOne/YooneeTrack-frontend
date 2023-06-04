@@ -2,7 +2,7 @@
 import Column from "@/models/Column";
 import TaskAll from "@/models/response/TaskAll";
 import Row from "@/models/Row";
-import taskService from "@/services/taskService";
+import deskService from "@/services/deskService";
 import { defineComponent, PropType } from "vue";
 
 import DeskRow from "./DeskRow.vue";
@@ -27,7 +27,8 @@ export default defineComponent({
 
   methods: {
     async init() {
-      this.tasks = await taskService.selectAll(this.id)
+      const desk  = await deskService.select(this.id)
+      this.tasks = desk.tasks
     }
   },
 
@@ -36,7 +37,7 @@ export default defineComponent({
       return this.tasks?.filter(task => 
         task.title.toLowerCase().includes(this.searchLower) || 
         task.description?.toLowerCase().includes(this.searchLower) || 
-        task.task_type?.toLowerCase().includes(this.searchLower))
+        task.taskType?.toLowerCase().includes(this.searchLower))
     },
 
     searchLower() {
@@ -62,7 +63,7 @@ export default defineComponent({
         {{ column.name }}
       </div>
     </div>
-    <desk-row v-bind="$attrs" v-for="row in rows" :id="row.id" :name="row.name" :tasks="filteredTasks?.filter(task => task.row_id === row.id)" :columns="columns"/>
+    <desk-row v-bind="$attrs" v-for="row in rows" :id="row.id" :name="row.name" :tasks="filteredTasks?.filter(task => task.rowId === row.id)" :columns="columns"/>
   </div>
 </template>
 
@@ -77,7 +78,7 @@ export default defineComponent({
 
   &-column {
     padding: 6px 18px;
-    min-width: 350px;
+    min-width: 180px;
     width: 100%;
     border-left: 1px solid $grey-500;
   }

@@ -6,7 +6,7 @@ import StorageService from "@/services/storageService";
 class AuthService {
   async login(login: string, password: string): Promise<User> {
     const { data } = await AuthController.login({login, password});
-    StorageService.setItem('token', data.access_token);
+    StorageService.setItem('token', data.accessToken);
 
     return data.user
   }

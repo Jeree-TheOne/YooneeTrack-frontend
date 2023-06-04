@@ -17,10 +17,10 @@ export const refreshToken = () => {
 
 const doRefresh = async () => {
   try {
-    const { data } = await axios.get<LoginData>('refresh')
+    const { data } = await axios.post<LoginData>('auth/refresh')
     if (data) isRefreshing = false
 
-    StorageService.setItem('token', data.access_token)
+    StorageService.setItem('token', data.accessToken)
 
     subscribers.forEach(resolveSubscription => resolveSubscription(data))
 

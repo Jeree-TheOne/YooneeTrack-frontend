@@ -1,6 +1,8 @@
 export default interface TaskType {
   id: string;
-  display_name: string;
   email: string;
-  path: string;
+  login: string;
+  firstName: string;
+  secondName: string;
+  avatar: string;
 }

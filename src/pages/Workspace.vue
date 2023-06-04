@@ -37,12 +37,12 @@ export default defineComponent({
   methods: {
     async init() {
       this.workspace = await workspaceService.singleWorkspace(this.$route.params.workspace as string)
-      this.deskId = this.$route.params.deskId === 'current' ? this.workspace.desks.find(desk => desk.is_current)?.id || '' : this.$route.params.deskId as string
+      this.deskId = this.$route.params.deskId === 'current' ? this.workspace.desks.find(desk => desk.isCurrent)?.id || '' : this.$route.params.deskId as string
       StorageService.setItem('workspace', this.workspace.id)
     },
 
     deskChange(deskId: string) {
-      const desk = this.workspace.desks.find(desk => desk.id === deskId)?.is_current ? 'current' : deskId
+      const desk = this.workspace.desks.find(desk => desk.id === deskId)?.isCurrent ? 'current' : deskId
       this.$router.replace(`/workspace/${this.workspace.id}/${desk}`)
       this.deskId = deskId
     },
@@ -53,8 +53,8 @@ export default defineComponent({
 
     addTask({columnId, rowId}: {columnId: string, rowId: string} ) {
       this.toggleTaskModal()
-      this.localTask.column_id = columnId
-      this.localTask.row_id = rowId
+      this.localTask.columnId = columnId
+      this.localTask.rowId = rowId
     },
 
     openTask(taskId: string) {
@@ -69,8 +69,17 @@ export default defineComponent({
     closeTaskModal(value: boolean) {
       this.toggleTaskModal()
       this.localTask = {} as Task
-
+      console.log(this.isTaskModalOpen);
       if (value) this.$router.go(0)
+    }
+  },
+
+  computed: {
+    attrs() {
+      const { columns, rows, members, tags } = this.workspace
+      return {
+        columns, rows, members, tags
+      }
     }
   },
 
@@ -96,7 +105,7 @@ export default defineComponent({
         <v-icon size="24" name="settingsIcon"/>
       </v-button>
     </div>
-    <desk @addTask="addTask" @openTask="openTask" :search="search" v-if="workspace" :id="deskId" :columns="workspace.columns" :rows="workspace.rows" :tags="workspace.tags"/>
+    <desk @addTask="addTask" @openTask="openTask" :search="search" v-if="workspace" :id="deskId" v-bind="attrs"/>
     <task-card-modal :task="localTask" :workspace="workspace" :show="isTaskModalOpen" @close="closeTaskModal"/>
  </div>
 </template>

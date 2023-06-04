@@ -35,8 +35,8 @@ export default defineComponent({
   computed: {
     items(): any {
       if (!this.workspace) return {}
-      const { rows, columns, desks, tags, taskTypes  } = this.workspace
-      return { rows, columns, desks, tags, taskTypes }
+      const { rows, columns, desks, tags, taskTypes, members  } = this.workspace
+      return { rows, columns, desks, tags, taskTypes, members }
     }
   },
 
@@ -63,6 +63,8 @@ export default defineComponent({
 
   gap: 24px;
 
-  padding: 24px 16px ;
+  padding: 24px 16px;
+
+  overflow: auto;
 }
 </style>

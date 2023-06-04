@@ -5,7 +5,6 @@ import TheHeader from "@/components/custom/TheHeader.vue";
 import User from "@/models/response/User";
 import jwtDecode from "jwt-decode";
 import StorageService from "@/services/storageService";
-import { refreshToken } from "@/interceptors/token-refresher";
 
 export default defineComponent({
   data(){

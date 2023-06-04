@@ -4,11 +4,11 @@ import axios, { AxiosResponse } from "axios"
 
 export default class WorkspaceController {
   static async availableWorkspaces(): Promise<AxiosResponse<Array<AvailableWorkspace>>> {
-    return axios.get<Array<AvailableWorkspace>>('/workspace')
+    return await axios.get<Array<AvailableWorkspace>>('/workspace')
   }
 
   static async singleWorkspace(id: string): Promise<AxiosResponse<Workspace>> {
-    return axios.get<Workspace>('/workspace/' + id)
+    return await axios.get<Workspace>('/workspace/' + id)
   }
 
   static async changeWorkspaceName(id: string, name: string) {
@@ -16,6 +16,10 @@ export default class WorkspaceController {
   }
 
   static async createWorkspace(name: string) {
-    return await axios.post('/workspace/add', { name })
+    return await axios.post('/workspace', { name })
+  }
+
+  static async deleteWorkspace(id: string) {
+    return await axios.delete('/workspace/' + id)
   }
 }

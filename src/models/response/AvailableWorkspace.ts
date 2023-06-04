@@ -1,5 +1,5 @@
 export default interface AvailableWorkspace {
   id: string;
-  created_at: number;
+  createdAt: number;
   name: string;
 }
